@@ -1,11 +1,11 @@
-import { randomUUID } from "crypto";
+import { uuidv7 } from "uuidv7";
 import { model, Schema } from "mongoose";
 
 const profileSchema = new Schema(
   {
     id: {
       type: String,
-      default: () => randomUUID(),
+      default: () => uuidv7(),
       unique: true,
       sparse: true,
     },
