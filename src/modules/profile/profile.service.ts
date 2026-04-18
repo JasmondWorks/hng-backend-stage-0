@@ -53,15 +53,15 @@ export class ProfileService {
 
     const [genderData, ageData, countryData] = await Promise.all([
       this.fetchExternal<GenderizeExternalApiResponse>(
-        `${this.genderizeApiUrl}/?name=${data.name}`,
+        `${this.genderizeApiUrl}?name=${data.name}`,
         "Genderize",
       ),
       this.fetchExternal<AgifyExternalApiResponse>(
-        `${this.agifyApiUrl}/?name=${data.name}`,
+        `${this.agifyApiUrl}?name=${data.name}`,
         "Agify",
       ),
       this.fetchExternal<NationalizeExternalApiResponse>(
-        `${this.nationalizeApiUrl}/?name=${data.name}`,
+        `${this.nationalizeApiUrl}?name=${data.name}`,
         "Nationalize",
       ),
     ]);
