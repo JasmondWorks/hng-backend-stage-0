@@ -2,46 +2,50 @@ export interface Profile {
   id: string;
   name: string;
   gender: string | null;
+  gender_probability: number;
+  sample_size: number;
+  age: number;
+  age_group: string;
+  country_id: string;
+  country_probability: number;
+  created_at: Date;
+}
+
+export interface ProfileShortResponse {
+  id: string;
+  name: string;
+  gender: string | null;
+  age: number;
+  age_group: string;
+  country_id: string;
+}
+export interface ProfileResponse {
+  id: string;
+  name: string;
+  gender: string | null;
+  gender_probability: number;
+  sample_size: number;
+  age: number;
+  age_group: string;
+  country_id: string;
+  country_probability: number;
+  created_at: Date;
+}
+
+export interface GenderizeExternalApiResponse {
+  name: string;
+  gender: string | null;
   probability: number;
-  sampleSize: number;
-  isConfident: boolean;
-  createdAt: Date;
+  count: number;
 }
 
-export class GenderizeExternalApiResponse {
-  name!: string;
-  gender!: string | null;
-  probability!: number;
-  count!: number;
-}
-export class AgifyExternalApiResponse {
-  name!: string;
-  age!: number;
-  count!: number;
-}
-export class NationalizeExternalApiResponse {
-  name!: string;
-  count!: number;
-  country: { country_id: string; probability: number }[] = [];
+export interface AgifyExternalApiResponse {
+  name: string;
+  age: number | null;
+  count: number;
 }
 
-export class ProfileResponse {
-  name!: string;
-  gender!: string | null;
-  gender_probability!: number;
-  sample_size!: number;
-  age!: number;
-  age_group!: string;
-  country_id!: string;
-  country_probability!: number;
-  created_at!: string;
-}
-
-export class ProfileShortResponse {
-  id!: string;
-  name!: string;
-  gender!: string | null;
-  age!: number;
-  age_group!: string;
-  country_id!: string;
+export interface NationalizeExternalApiResponse {
+  name: string;
+  country: { country_id: string; probability: number }[];
 }

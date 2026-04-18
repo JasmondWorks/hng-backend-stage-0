@@ -3,11 +3,13 @@ import { Response } from "express";
 export const sendSuccess = (
   res: Response,
   data: any,
-  _message?: string, // Kept for backwards compatibility but not used in the strict response
+  message?: string,
   statusCode = 200,
 ) => {
   return res.status(statusCode).json({
     status: "success",
+    ...(message && { message }),
+    ...(Array.isArray(data) && { count: data.length }),
     data,
   });
 };
