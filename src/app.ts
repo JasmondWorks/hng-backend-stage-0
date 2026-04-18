@@ -6,26 +6,14 @@ if (process.env.NODE_ENV !== "production") {
 import express, { NextFunction, Request, Response } from "express";
 
 import v1Routes from "./routes/v1.route";
-import { connectDB } from "./db/mongoose";
-
 import { globalErrorHandler } from "./middlewares/error.middleware";
 
 import { AppError } from "./utils/app-error.util";
 import cors from "cors";
-import rateLimit from "express-rate-limit";
 
 const app = express();
 
-// CORS must run before everything so error responses (429, etc.) also include CORS headers
 app.use(cors({ origin: "*" }));
-
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: "Too many requests from this IP, please try again after 15 minutes",
-});
-
-app.use(limiter);
 
 // Middleware to inject processed_at and attach it to all JSON responses
 // app.use((req: Request, res: Response, next: NextFunction) => {
@@ -56,7 +44,6 @@ app.use(limiter);
 // });
 
 app.use(express.json());
-app.use((_req, _res, next) => { connectDB().then(() => next()).catch(next); });
 
 app.use("/api", v1Routes);
 
@@ -66,7 +53,7 @@ app.get("/", (_, res: Response) => {
 
 // 404 catch-all
 
-app.use((req: Request, res: Response, next: NextFunction) => {
+app.use((req: Request, _res: Response, next: NextFunction) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
