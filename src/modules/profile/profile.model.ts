@@ -1,7 +1,9 @@
+import { v7 as uuidv7 } from "uuid";
 import { model, Schema } from "mongoose";
 
 const profileSchema = new Schema(
   {
+    _id: { type: String, default: () => uuidv7() },
     name: { type: String, required: true, unique: true },
     gender: { type: String, default: null },
     gender_probability: { type: Number, required: true },

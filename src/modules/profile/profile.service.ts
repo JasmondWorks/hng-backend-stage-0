@@ -51,17 +51,18 @@ export class ProfileService {
     const existing = await this.profileRepo.findByName(data.name);
     if (existing) return { message: "Profile already exists", data: existing };
 
+    const encodedName = encodeURIComponent(data.name);
     const [genderData, ageData, countryData] = await Promise.all([
       this.fetchExternal<GenderizeExternalApiResponse>(
-        `${this.genderizeApiUrl}?name=${data.name}`,
+        `${this.genderizeApiUrl}?name=${encodedName}`,
         "Genderize",
       ),
       this.fetchExternal<AgifyExternalApiResponse>(
-        `${this.agifyApiUrl}?name=${data.name}`,
+        `${this.agifyApiUrl}?name=${encodedName}`,
         "Agify",
       ),
       this.fetchExternal<NationalizeExternalApiResponse>(
-        `${this.nationalizeApiUrl}?name=${data.name}`,
+        `${this.nationalizeApiUrl}?name=${encodedName}`,
         "Nationalize",
       ),
     ]);

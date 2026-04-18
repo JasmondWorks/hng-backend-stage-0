@@ -1,5 +1,4 @@
 import { body, query } from "express-validator";
-import { capitalizeFirstLetter } from "./stringFormat";
 
 export function stringBodyValidator(fieldName: string, message: string) {
   return [
@@ -8,7 +7,7 @@ export function stringBodyValidator(fieldName: string, message: string) {
       .withMessage(message)
       .bail()
       .isString()
-      .withMessage(`${capitalizeFirstLetter(fieldName)} must be a string`)
+      .withMessage(`Unprocessable Entity: Invalid type`)
       .bail()
       .notEmpty()
       .withMessage(`Missing or empty ${fieldName}`)

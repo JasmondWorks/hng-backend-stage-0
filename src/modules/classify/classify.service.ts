@@ -1,4 +1,3 @@
-import { ClassificationRepository } from "./classify.repository";
 import { AppError } from "../../utils/app-error.util";
 import {
   ClassifyExternalApiResponse,
@@ -14,7 +13,7 @@ export class ClassifyService {
     let response: Response;
 
     try {
-      response = await fetch(`${this.genderizeApi}/?name=${data.name}`);
+      response = await fetch(`${this.genderizeApi}/?name=${encodeURIComponent(data.name)}`);
     } catch (err) {
       console.error("Fetch failed:", err);
       throw new AppError(serverErrorMessage, 502);

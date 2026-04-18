@@ -16,13 +16,15 @@ import rateLimit from "express-rate-limit";
 
 const app = express();
 
+// CORS must run before everything so error responses (429, etc.) also include CORS headers
+app.use(cors({ origin: "*" }));
+
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: "Too many requests from this IP, please try again after 15 minutes",
 });
 
-// Apply rate limiting to all requests
 app.use(limiter);
 
 // Middleware to inject processed_at and attach it to all JSON responses
@@ -53,14 +55,8 @@ app.use(limiter);
 //   next();
 // });
 
-// ==== Middlewares
 app.use(express.json());
 app.use((_req, _res, next) => { connectDB().then(() => next()).catch(next); });
-app.use(
-  cors({
-    origin: "*",
-  }),
-);
 
 app.use("/api", v1Routes);
 
