@@ -1,10 +1,13 @@
 import { Model } from "mongoose";
 import { AppError } from "../../utils/app-error.util";
-import { IRepository } from "./base.repository.interface";
+import { IRepository, QueryParams } from "./base.repository.interface";
+import { APIFeatures } from "../../utils/api-features.util";
 
-export abstract class BaseRepository<T, CreateInput, UpdateInput>
-  implements IRepository<T, CreateInput, UpdateInput>
-{
+export abstract class BaseRepository<
+  T,
+  CreateInput,
+  UpdateInput,
+> implements IRepository<T, CreateInput, UpdateInput> {
   constructor(protected readonly model: Model<any>) {}
 
   protected toEntity(doc: any): T {
@@ -28,9 +31,16 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput>
     }
   }
 
-  async findAll(): Promise<T[]> {
-    const docs = await this.model.find();
-    return docs.map((doc) => this.toEntity(doc));
+  async findAll(queryParams: QueryParams): Promise<T[]> {
+    const features = new APIFeatures(this.model.find(), queryParams)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+
+    const query = features.getQuery();
+
+    return await query;
   }
 
   async findOne(filter: Partial<T>): Promise<T | null> {
@@ -45,7 +55,9 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput>
 
   async update(id: string, data: UpdateInput): Promise<T | null> {
     try {
-      const doc = await this.model.findByIdAndUpdate(id, data as any, { new: true });
+      const doc = await this.model.findByIdAndUpdate(id, data as any, {
+        new: true,
+      });
       return doc ? this.toEntity(doc) : null;
     } catch (err) {
       this.guardId(err);

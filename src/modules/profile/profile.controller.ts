@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { ProfileDTO } from "./profile.dtos";
 import { ProfileService } from "./profile.service";
+import { sendSuccess } from "../../utils/api-response.util";
 
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
@@ -10,41 +11,39 @@ export class ProfileController {
     const result = await this.profileService.createProfile(data);
 
     if ("message" in result) {
-      res.status(200).json({
-        status: "success",
-        message: result.message,
-        data: result.data,
-      });
+      // res.status(200).json({
+      //   status: "success",
+      //   message: result.message,
+      //   data: result.data,
+      // });
+      sendSuccess(res, result.data, result.message, 200);
       return;
     }
 
-    res.status(201).json({ status: "success", data: result });
+    // res.status(201).json({ status: "success", data: result });
+    sendSuccess(res, result, undefined, 201);
   }
 
   async getProfileById(req: Request, res: Response) {
     const data = await this.profileService.getProfileById(
       req.params.id as string,
     );
-    res.status(200).json({ status: "success", data });
+    // res.status(200).json({ status: "success", data });
+    sendSuccess(res, data, undefined, 200);
   }
 
   async getAllProfiles(req: Request, res: Response) {
-    const { gender, country_id, age_group } = req.query as {
-      gender?: string;
-      country_id?: string;
-      age_group?: string;
-    };
-
-    const data = await this.profileService.getAllProfiles({
-      gender: gender as string,
-      country_id: country_id as string,
-      age_group: age_group as string,
+    const profiles = await this.profileService.getAllProfiles(req.query, {
+      gender: req.query.gender as string,
+      country_id: req.query.country_id as string,
+      age_group: req.query.age_group as string,
     });
-    res.status(200).json({ status: "success", count: data.length, data });
+    sendSuccess(res, profiles, undefined, 200);
   }
 
   async deleteProfile(req: Request, res: Response) {
     await this.profileService.deleteProfile(req.params.id as string);
-    res.status(204).send();
+    // res.status(204).send();
+    sendSuccess(res, undefined, undefined, 204);
   }
 }

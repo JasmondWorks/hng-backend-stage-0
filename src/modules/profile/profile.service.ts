@@ -1,3 +1,6 @@
+import { countriesList } from "../../common/constants/countries";
+import { QueryParams } from "../../common/repositories/base.repository.interface";
+import { APIFeatures } from "../../utils/api-features.util";
 import { AppError } from "../../utils/app-error.util";
 import { CreateProfileDTO, ProfileDTO } from "./profile.dtos";
 import { ProfileRepository } from "./profile.repository";
@@ -96,10 +99,12 @@ export class ProfileService {
       name: data.name,
       gender: genderData.gender,
       gender_probability: genderData.probability,
-      sample_size: genderData.count,
       age: ageData.age!,
       age_group: this.categorizeAge(ageData.age!),
       country_id: topCountry.country_id,
+      country_name: countriesList.find(
+        (country) => country.country_code === topCountry.country_id,
+      )?.country_name!,
       country_probability: topCountry.probability,
     };
 
@@ -112,12 +117,16 @@ export class ProfileService {
     return profile;
   }
 
-  async getAllProfiles(filters: {
-    gender?: string;
-    country_id?: string;
-    age_group?: string;
-  }) {
-    const profiles = await this.profileRepo.findAllFiltered(filters);
+  async getAllProfiles(
+    queryParams: QueryParams,
+    options: {
+      gender?: string;
+      country_id?: string;
+      age_group?: string;
+    },
+  ) {
+    const mergedQuery = { ...queryParams, ...options };
+    const profiles = await this.profileRepo.findAll(mergedQuery as any);
 
     return profiles.map(({ id, name, gender, age, age_group, country_id }) => ({
       id,

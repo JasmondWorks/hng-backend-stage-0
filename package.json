@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node dist/server.js",
     "build": "npx tsc",
-    "dev": "npx ts-node-dev -r tsconfig-paths/register --files src/server.ts"
+    "dev": "npx ts-node-dev -r tsconfig-paths/register --files src/server.ts",
+    "seed": "ts-node -r tsconfig-paths/register src/scripts/seed.ts"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +18,7 @@
     "bcrypt": "^6.0.0",
     "class-validator": "^0.15.1",
     "cors": "^2.8.6",
+    "countries-list": "^3.3.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.2",

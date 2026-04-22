@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
 if (process.env.NODE_ENV !== "production") {
   dotenv.config({ path: ".env.local" });
+} else {
+  dotenv.config();
 }
 
 import express, { NextFunction, Request, Response } from "express";
