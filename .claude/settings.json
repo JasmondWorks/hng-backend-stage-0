@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(git log *)",
+      "Bash(git ls-remote *)",
+      "Bash(git commit *)",
+      "Bash(node -e \"const {v7} = require\\('uuid'\\); console.log\\('uuid v7:', v7\\(\\)\\)\")"
     ]
   }
 }

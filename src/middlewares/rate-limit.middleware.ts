@@ -6,7 +6,7 @@ const tooManyRequests = {
   message: "Too many requests, please try again later",
 };
 
-// For auth routes — 10 per minute, keyed by IP (no user identity yet)
+// Auth endpoints: 10 per minute, default IP-based key (IPv6-safe)
 export const authRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 10,
@@ -15,12 +15,12 @@ export const authRateLimiter = rateLimit({
   message: tooManyRequests,
 });
 
-// For all other API routes — 60 per minute, keyed by user ID.
-// This middleware must run AFTER protect so that req.user is populated.
+// Authenticated API endpoints: 60 per minute, keyed by user ID.
+// Runs after protect, so req.user is always populated — no IP fallback needed.
 export const apiRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 60,
-  keyGenerator: (req: Request) => req.user?.id ?? req.ip ?? "unknown",
+  keyGenerator: (req: Request) => req.user?.id ?? "anonymous",
   standardHeaders: true,
   legacyHeaders: false,
   message: tooManyRequests,
