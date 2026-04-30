@@ -6,24 +6,36 @@ export const envConfig = {
   agifyApiUrl: process.env.AGIFY_API_URL || "https://api.agify.io",
   nationalizeApiUrl:
     process.env.NATIONALIZE_API_URL || "https://api.nationalize.io",
-  mongoUrl: process.env.MONGO_URL!,
+  // mongoUrl: process.env.MONGO_URL!,
+
+  databaseUrl: process.env.DATABASE_URL!,
 
   githubClientId: process.env.GITHUB_CLIENT_ID!,
   githubClientSecret: process.env.GITHUB_CLIENT_SECRET!,
-  githubCallbackUrl: process.env.GITHUB_CALLBACK_URL!,
-  githubAccessTokenUrl: process.env.GITHUB_ACCESS_TOKEN_URL!,
-  githubUserUrl: process.env.GITHUB_USER_URL!,
-  githubLoginUrl: process.env.GITHUB_LOGIN_URL!,
-  githubState: process.env.GITHUB_STATE!,
+  githubRedirectUri: process.env.GITHUB_REDIRECT_URI!,
+  githubOauthBaseUrl: process.env.GITHUB_OAUTH_BASE_URL!,
+
+  jwtAccessTokenSecret: process.env.JWT_ACCESS_TOKEN_SECRET!,
+  jwtRefreshTokenSecret: process.env.JWT_REFRESH_TOKEN_SECRET!,
+  accessTokenExpiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRE!,
+  refreshTokenExpiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRE!,
 };
 
 const requiredEnvVars = [
-  "mongoUrl",
+  "databaseUrl",
   "genderizeApiUrl",
   "agifyApiUrl",
   "nationalizeApiUrl",
   "port",
   "env",
+  "githubClientId",
+  "githubClientSecret",
+  "githubRedirectUri",
+  "githubOauthBaseUrl",
+  "jwtAccessTokenSecret",
+  "jwtRefreshTokenSecret",
+  "accessTokenExpiresIn",
+  "refreshTokenExpiresIn",
 ];
 
 requiredEnvVars.forEach((envVar) => {

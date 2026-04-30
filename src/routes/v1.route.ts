@@ -2,15 +2,17 @@ import express, { Response, Router } from "express";
 
 const router: Router = express.Router();
 
+import authRoutes from "../modules/auth/auth.routes";
+import userRoutes from "../modules/user/user.routes";
 import classifyRoutes from "../modules/classify/classify.routes";
 import profileRoutes from "../modules/profile/profile.routes";
 
-// Health check
 router.get("/health", (_, res: Response) => {
   res.status(200).json({ ok: true, message: "HNG Backend API is running" });
 });
 
-// Mount modules
+router.use("/auth", authRoutes);
+router.use("/users", userRoutes);
 router.use("/classify", classifyRoutes);
 router.use("/profiles", profileRoutes);
 

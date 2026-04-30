@@ -1,16 +1,27 @@
 import { config } from "dotenv";
 config({ path: ".env.local" });
 
-import mongoose from "mongoose";
-import { ProfileModel } from "../modules/profile/profile.model";
+import { v7 as uuidv7 } from "uuid";
+import { prisma } from "../db/prisma";
 import data from "../../seed_profiles.json";
-import { envConfig } from "../config/env.config";
 import { CreateProfileDTO } from "../modules/profile/profile.dtos";
 
+// Mongoose equivalent:
+//   await mongoose.connect(envConfig.mongoUrl)
+//   await ProfileModel.insertMany(profiles, { ordered: false })
+//
+// Prisma equivalent:
+//   prisma.profile.createMany({ data, skipDuplicates: true })
+//
+// skipDuplicates: true  ===  { ordered: false } in Mongoose —
+// both tell the database to skip records that violate a unique constraint
+// (the name column) rather than aborting the whole batch.
+
 async function seed() {
-  const profiles = data.profiles.map((profile: CreateProfileDTO) => ({
+  const profiles = (data.profiles as CreateProfileDTO[]).map((profile) => ({
+    id: uuidv7(),
     name: profile.name,
-    gender: profile.gender,
+    gender: profile.gender ?? "",
     gender_probability: profile.gender_probability,
     age: profile.age,
     age_group: profile.age_group,
@@ -20,16 +31,21 @@ async function seed() {
   }));
 
   try {
-    await mongoose.connect(envConfig.mongoUrl);
+    // await prisma.profile.deleteMany();
 
-    // Option A: insert many but ignore duplicates
-    await ProfileModel.insertMany(profiles, { ordered: false });
+    const result = await prisma.profile.createMany({
+      data: profiles,
+      skipDuplicates: true,
+    });
 
-    console.log(`Seeding completed with ${profiles.length} profiles`);
-    process.exit();
+    console.log(
+      `Seeding completed. Inserted ${result.count} of ${profiles.length} profiles.`,
+    );
   } catch (err) {
     console.error(err);
     process.exit(1);
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

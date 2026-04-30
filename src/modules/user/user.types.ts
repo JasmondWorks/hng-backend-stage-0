@@ -1,24 +1,6 @@
-export enum Roles {
-  ADMIN = "admin",
-  ANALYST = "analyst",
-}
+// UserRoles is a runtime object ({ admin: "admin", analyst: "analyst" }) —
+// exported as a value so it can be used in comparisons and route guards.
+export { UserRoles } from "@prisma/client";
 
-export enum Status {
-  ACTIVE = "active",
-  INACTIVE = "inactive",
-}
-
-interface User {
-  id: string;
-  github_id: string;
-  username: string;
-  email: string;
-  avatar_url: string;
-  last_login_at: Date;
-  created_at: Date;
-  updated_at: Date;
-  role: Roles;
-  status: Status;
-}
-
-export type { User };
+// User is a type-only export — no runtime object needed.
+export type { User } from "@prisma/client";

@@ -1,95 +1,61 @@
-import { Model } from "mongoose";
 import { AppError } from "../../utils/app-error.util";
 import { IRepository, QueryParams } from "./base.repository.interface";
-import { APIFeatures } from "../../utils/api-features.util";
+import { buildPrismaQuery } from "../../utils/prisma-query-builder.util";
 
-export abstract class BaseRepository<
-  T,
-  CreateInput,
-  UpdateInput,
-> implements IRepository<T, CreateInput, UpdateInput> {
-  constructor(protected readonly model: Model<any>) {}
-
-  protected toEntity(doc: any): T {
-    const obj = doc.toObject ? doc.toObject() : { ...doc };
-    const { _id, __v, ...rest } = obj;
-    return { id: _id.toString(), ...rest } as T;
-  }
-
-  private guardId(err: any): never {
-    if (err.name === "CastError" && err.kind === "ObjectId")
-      throw new AppError(`Invalid id: ${err.value}`, 400);
-    throw err;
-  }
+export abstract class BaseRepository<T, CreateInput, UpdateInput>
+  implements IRepository<T, CreateInput, UpdateInput>
+{
+  protected abstract readonly delegate: any;
 
   async findById(id: string): Promise<T | null> {
-    try {
-      const doc = await this.model.findById(id);
-      return doc ? this.toEntity(doc) : null;
-    } catch (err) {
-      this.guardId(err);
-    }
-  }
-
-  async findAll(queryParams: QueryParams): Promise<T[]> {
-    const features = new APIFeatures(this.model.find(), queryParams)
-      .filter()
-      .sort()
-      .limitFields()
-      .paginate();
-
-    const docs = await features.getQuery();
-    return docs.map((doc: any) => this.toEntity(doc));
-  }
-
-  async findAllWithPagination(queryParams: QueryParams) {
-    const countFeatures = new APIFeatures(this.model.find(), queryParams).filter();
-    const total = await countFeatures.getQuery().countDocuments();
-
-    const features = new APIFeatures(this.model.find(), queryParams)
-      .filter()
-      .sort()
-      .limitFields()
-      .paginate();
-
-    const docs = await features.getQuery();
-    const data = docs.map((doc: any) => this.toEntity(doc));
-
-    const page = parseInt(queryParams.page ?? "1") || 1;
-    const limit = Math.min(parseInt(queryParams.limit ?? "10") || 10, 50);
-
-    return {
-      data,
-      pagination: { page, limit, total },
-    };
+    return this.delegate.findUnique({ where: { id } });
   }
 
   async findOne(filter: Partial<T>): Promise<T | null> {
-    const doc = await this.model.findOne(filter as any);
-    return doc ? this.toEntity(doc) : null;
+    return this.delegate.findFirst({ where: filter });
   }
 
   async create(data: CreateInput): Promise<T> {
-    const doc = await this.model.create(data as any);
-    return this.toEntity(doc);
+    return this.delegate.create({ data });
   }
 
   async update(id: string, data: UpdateInput): Promise<T | null> {
     try {
-      const doc = await this.model.findByIdAndUpdate(id, data as any, {
-        new: true,
-      });
-      return doc ? this.toEntity(doc) : null;
-    } catch (err) {
-      this.guardId(err);
+      return await this.delegate.update({ where: { id }, data });
+    } catch (err: any) {
+      if (err?.code === "P2025") return null;
+      throw err;
     }
   }
 
   async delete(id: string): Promise<void> {
     try {
-      await this.model.findByIdAndDelete(id);
-    } catch (err) {
-      this.guardId(err);
+      await this.delegate.delete({ where: { id } });
+    } catch (err: any) {
+      if (err?.code === "P2025") throw new AppError("Record not found", 404);
+      throw err;
     }
+  }
+
+  async findAll(queryParams: QueryParams): Promise<T[]> {
+    const { where, orderBy, skip, take } = buildPrismaQuery(queryParams);
+    return this.delegate.findMany({ where, orderBy, skip, take });
+  }
+
+  // Returns every matching record without pagination — used for data exports.
+  async findAllRaw(queryParams: QueryParams): Promise<T[]> {
+    const { where, orderBy } = buildPrismaQuery(queryParams);
+    return this.delegate.findMany({ where, orderBy });
+  }
+
+  async findAllWithPagination(queryParams: QueryParams) {
+    const { where, orderBy, skip, take, page, limit } = buildPrismaQuery(queryParams);
+
+    const [total, data] = await Promise.all([
+      this.delegate.count({ where }),
+      this.delegate.findMany({ where, orderBy, skip, take }),
+    ]);
+
+    return { data: data as T[], pagination: { page, limit, total } };
   }
 }

@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    name: Lint, Type Check & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        env:
+          # Prisma generate reads schema.prisma and emits TypeScript types.
+          # It does not connect to the database, but the config file is
+          # evaluated so DATABASE_URL must be a syntactically valid URL.
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+
+      - name: Build
+        run: npx tsc
+        # prisma generate already ran above; just compile TypeScript

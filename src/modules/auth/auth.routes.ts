@@ -3,41 +3,46 @@ import { envConfig } from "../../config/env.config";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { asyncHandler } from "../../utils/async-handler.util";
+import { prisma } from "../../db/prisma";
+import { authRateLimiter } from "../../middlewares/rate-limit.middleware";
 
 const router = Router();
 
+router.use(authRateLimiter);
+
 const authService = new AuthService(
-  envConfig.githubLoginUrl,
-  envConfig.githubAccessTokenUrl,
-  envConfig.githubUserUrl,
+  prisma,
+  envConfig.jwtAccessTokenSecret,
+  envConfig.jwtRefreshTokenSecret,
+  envConfig.accessTokenExpiresIn,
+  envConfig.refreshTokenExpiresIn,
+  envConfig.githubOauthBaseUrl,
   envConfig.githubClientId,
   envConfig.githubClientSecret,
-  envConfig.githubCallbackUrl,
-  envConfig.githubState,
+  envConfig.githubRedirectUri,
 );
 const authController = new AuthController(authService);
 
-// router.post(
-//   "/register",
-//   asyncHandler(authController.register.bind(authController)),
-// );
-// router.post("/login", asyncHandler(authController.login.bind(authController)));
-
 router.get(
   "/github",
-  asyncHandler(authController.githubLogin.bind(authController)),
+  asyncHandler(authController.githubAuth.bind(authController)),
 );
 router.get(
   "/github/callback",
-  asyncHandler(authController.githubLogin.bind(authController)),
+  asyncHandler(authController.githubCallback.bind(authController)),
+);
+// CLI posts code + code_verifier + redirect_uri after capturing GitHub's redirect locally
+router.post(
+  "/github/token",
+  asyncHandler(authController.githubCliToken.bind(authController)),
 );
 router.post(
   "/refresh",
-  asyncHandler(authController.githubLogin.bind(authController)),
+  asyncHandler(authController.refresh.bind(authController)),
 );
 router.post(
   "/logout",
-  asyncHandler(authController.githubLogin.bind(authController)),
+  asyncHandler(authController.logout.bind(authController)),
 );
 
 export default router;

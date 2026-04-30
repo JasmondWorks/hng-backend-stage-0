@@ -1,7 +1,35 @@
 import { Request, Response } from "express";
 import { ProfileDTO } from "./profile.dtos";
 import { ProfileService } from "./profile.service";
-import { sendSuccess } from "../../utils/api-response.util";
+import { sendSuccess, buildPaginationLinks } from "../../utils/api-response.util";
+import type { Profile } from "./profile.types";
+
+const CSV_HEADERS =
+  "id,name,gender,gender_probability,age,age_group,country_id,country_name,country_probability,created_at";
+
+function toCsvValue(val: string | number | boolean | null | Date): string {
+  const str = val instanceof Date ? val.toISOString() : String(val ?? "");
+  return str.includes(",") || str.includes('"') || str.includes("\n")
+    ? `"${str.replace(/"/g, '""')}"`
+    : str;
+}
+
+function profileToCsvRow(p: Profile): string {
+  return [
+    p.id,
+    p.name,
+    p.gender,
+    p.gender_probability,
+    p.age,
+    p.age_group,
+    p.country_id,
+    p.country_name,
+    p.country_probability,
+    p.created_at,
+  ]
+    .map(toCsvValue)
+    .join(",");
+}
 
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
@@ -25,22 +53,51 @@ export class ProfileController {
   }
 
   async getAllProfiles(req: Request, res: Response) {
-    const profiles = await this.profileService.getAllProfiles(req.query as any);
+    const result = await this.profileService.getAllProfiles(req.query as any);
+    const { page, limit, total } = result.pagination;
+    const { total_pages, links } = buildPaginationLinks(
+      req.originalUrl,
+      page,
+      limit,
+      total,
+    );
 
-    sendSuccess(res, profiles.data, {
+    sendSuccess(res, result.data, {
       statusCode: 200,
-      pagination: profiles.pagination,
+      pagination: { page, limit, total, total_pages, links },
     });
   }
 
   async getProfilesBySearchQuery(req: Request, res: Response) {
-    const profiles = await this.profileService.getProfilesBySearchQuery(
+    const result = await this.profileService.getProfilesBySearchQuery(
       req.query as any,
     );
-    sendSuccess(res, profiles.data, {
+    const { page, limit, total } = result.pagination;
+    const { total_pages, links } = buildPaginationLinks(
+      req.originalUrl,
+      page,
+      limit,
+      total,
+    );
+
+    sendSuccess(res, result.data, {
       statusCode: 200,
-      pagination: profiles.pagination,
+      pagination: { page, limit, total, total_pages, links },
     });
+  }
+
+  async exportProfiles(req: Request, res: Response) {
+    const profiles = await this.profileService.exportProfiles(
+      req.query as any,
+    );
+
+    const rows = profiles.map(profileToCsvRow);
+    const csv = [CSV_HEADERS, ...rows].join("\n");
+    const filename = `profiles_${Date.now()}.csv`;
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send(csv);
   }
 
   async deleteProfile(req: Request, res: Response) {

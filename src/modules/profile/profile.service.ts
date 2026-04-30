@@ -1,7 +1,7 @@
 import { countriesList } from "../../common/constants/countries";
 import { QueryParams } from "../../common/repositories/base.repository.interface";
 import { AppError } from "../../utils/app-error.util";
-import { transformToMongoFilters } from "../../utils/filter-transformer.util";
+import { transformToFilters } from "../../utils/filter-transformer.util";
 import { parseNaturalQuery } from "../../utils/nl-query-parser.util";
 import { CreateProfileDTO, ProfileDTO } from "./profile.dtos";
 import { ProfileRepository } from "./profile.repository";
@@ -115,9 +115,10 @@ export class ProfileService {
       age: ageData.age!,
       age_group: this.categorizeAge(ageData.age!),
       country_id: topCountry.country_id,
-      country_name: countriesList.find(
-        (country) => country.country_code === topCountry.country_id,
-      )?.country_name!,
+      country_name:
+        countriesList.find(
+          (country) => country.country_code === topCountry.country_id,
+        )?.country_name ?? topCountry.country_id,
       country_probability: topCountry.probability,
     };
 
@@ -151,15 +152,26 @@ export class ProfileService {
       throw new AppError("Unable to interpret query", 400);
     }
 
-    const mongoFilters = transformToMongoFilters(parsed);
+    const filters = transformToFilters(parsed);
 
-    const searchParams = { ...rest, ...mongoFilters };
+    const searchParams = { ...rest, ...filters };
 
     const result = await this.profileRepo.findAllWithPagination(
       searchParams as any,
     );
 
     return { data: result.data, pagination: result.pagination };
+  }
+
+  async exportProfiles(queryParams: ProfileQueryParams): Promise<Profile[]> {
+    const { q, ...rest } = queryParams;
+    if (q) {
+      const parsed = parseNaturalQuery(q);
+      if (!parsed) throw new AppError("Unable to interpret query", 400);
+      const filters = transformToFilters(parsed);
+      return this.profileRepo.findAllRaw({ ...rest, ...filters } as any);
+    }
+    return this.profileRepo.findAllRaw(rest);
   }
 
   async deleteProfile(id: string): Promise<void> {

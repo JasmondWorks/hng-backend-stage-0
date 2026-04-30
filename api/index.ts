@@ -1,18 +1,12 @@
 import app from "../src/app";
-import { connectDB } from "../src/db/mongoose";
 
-let isDbConnected = false;
+// Mongoose had an explicit connectDB() call here with an isDbConnected flag
+// because the connection was async and had to be established before handling requests.
+//
+// Prisma connects lazily on the first query and manages its own connection pool,
+// so there is nothing to await here. The handler is just the Express app.
 
 const handler = async (req: any, res: any) => {
-  if (!isDbConnected) {
-    try {
-      await connectDB();
-      isDbConnected = true;
-    } catch (err) {
-      console.error("[DB] Connection failed:", err);
-      return res.status(503).json({ status: "error", message: "Database unavailable" });
-    }
-  }
   return app(req, res);
 };
 

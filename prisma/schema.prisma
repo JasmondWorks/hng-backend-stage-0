@@ -1,0 +1,75 @@
+enum UserRoles {
+  admin
+  analyst
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// In Prisma 7 the connection URL moved out of schema.prisma.
+// It lives in prisma.config.ts (for migrations) and is passed via a
+// driver adapter to PrismaClient (for queries). See src/db/prisma.ts.
+datasource db {
+  provider = "postgresql"
+}
+
+model Profile {
+  id                  String   @id
+  name                String   @unique
+  gender              String? // nullable — Genderize API can return null
+  gender_probability  Float
+  age                 Int
+  age_group           String
+  country_id          String   @db.VarChar(2)
+  country_name        String
+  country_probability Float
+  created_at          DateTime @default(now()) @db.Timestamptz
+
+  @@index([gender])
+  @@index([age_group])
+  @@index([country_id])
+  @@index([age])
+  @@index([created_at])
+  @@map("profiles")
+}
+
+model Classification {
+  id          String   @id
+  name        String
+  gender      String?
+  probability Float
+  sampleSize  Int      @map("sample_size")
+  isConfident Boolean  @map("is_confident")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("classifications")
+}
+
+model User {
+  id            String    @id @default(uuid(7))
+  github_id     String    @unique @map("github_id") @db.VarChar()
+  username      String    @db.VarChar()
+  email         String    @db.VarChar()
+  avatar_url    String    @map("avatar_url") @db.VarChar()
+  role          UserRoles @default(analyst)
+  is_active     Boolean   @default(false) @map("is_active")
+  last_login_at DateTime? @map("last_login_at") @db.Timestamptz
+  created_at    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  refresh_tokens RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid(7))
+  token      String   @unique
+  user_id    String   @map("user_id")
+  expires_at DateTime @map("expires_at") @db.Timestamptz
+  created_at DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}

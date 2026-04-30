@@ -8,14 +8,20 @@ if (process.env.NODE_ENV !== "production") {
 import express, { NextFunction, Request, Response } from "express";
 
 import v1Routes from "./routes/v1.route";
+import authRoutes from "./modules/auth/auth.routes";
 import { globalErrorHandler } from "./middlewares/error.middleware";
+import { requestLogger } from "./middlewares/request-logger.middleware";
 
 import { AppError } from "./utils/app-error.util";
+import { envConfig } from "./config/env.config";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
+app.use(requestLogger);
 app.use(cors({ origin: "*" }));
+app.use(cookieParser(envConfig.jwtAccessTokenSecret));
 
 // Middleware to inject processed_at and attach it to all JSON responses
 // app.use((req: Request, res: Response, next: NextFunction) => {
@@ -48,6 +54,7 @@ app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 app.use("/api", v1Routes);
+app.use("/auth", authRoutes);
 
 app.get("/", (_, res: Response) => {
   res.status(200).json({ message: "Welcome to the HNG Backend API" });
