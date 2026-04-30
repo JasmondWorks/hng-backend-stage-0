@@ -19,6 +19,10 @@ import cookieParser from "cookie-parser";
 
 const app = express();
 
+// Tell Express to trust Vercel's reverse proxy so X-Forwarded-For is used
+// correctly by rate-limiters and IP detection middleware.
+app.set("trust proxy", 1);
+
 app.use(requestLogger);
 app.use(cors({ origin: "*" }));
 app.use(cookieParser(envConfig.jwtAccessTokenSecret));
