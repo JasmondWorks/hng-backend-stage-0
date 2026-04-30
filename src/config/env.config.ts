@@ -6,7 +6,6 @@ export const envConfig = {
   agifyApiUrl: process.env.AGIFY_API_URL || "https://api.agify.io",
   nationalizeApiUrl:
     process.env.NATIONALIZE_API_URL || "https://api.nationalize.io",
-  // mongoUrl: process.env.MONGO_URL!,
 
   databaseUrl: process.env.DATABASE_URL!,
 
